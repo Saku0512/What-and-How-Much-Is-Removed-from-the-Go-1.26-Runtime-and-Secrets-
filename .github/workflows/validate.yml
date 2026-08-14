@@ -44,4 +44,5 @@ jobs:
             artifacts/ci/*.tsv
             artifacts/ci/*.json
             artifacts/ci/*.log
+            artifacts/ci/*.txt
           if-no-files-found: warn

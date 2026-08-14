@@ -88,6 +88,16 @@ func consume(b []byte) {
 	runtime.KeepAlive(b)
 }
 
+// forceHeap publishes b through a package-level pointer. This is not used as
+// the observation itself; it exists to make the heap cases unambiguous to
+// escape analysis. Cases that need the allocation to become unreachable set
+// escaped back to nil before reaching READY.
+//
+//go:noinline
+func forceHeap(b []byte) {
+	escaped = b
+}
+
 //go:noinline
 func makePlainStack() {
 	var b [marker.BufferSize]byte
@@ -136,6 +146,8 @@ func makePlainHeap() {
 	b := make([]byte, marker.BufferSize)
 	marker.Fill(b)
 	consume(b)
+	forceHeap(b)
+	escaped = nil
 }
 
 func plainHeapAfterGC(ready chan<- struct{}) {
@@ -150,6 +162,7 @@ func secretHeapLive(ready chan<- struct{}) {
 		b := make([]byte, marker.BufferSize)
 		marker.Fill(b)
 		consume(b)
+		forceHeap(b)
 		close(ready)
 		<-hold
 		runtime.KeepAlive(b)
@@ -161,6 +174,8 @@ func secretHeapBeforeGC(ready chan<- struct{}) {
 		b := make([]byte, marker.BufferSize)
 		marker.Fill(b)
 		consume(b)
+		forceHeap(b)
+		escaped = nil
 	})
 	close(ready)
 	<-hold
@@ -171,6 +186,8 @@ func secretHeapAfterGC(ready chan<- struct{}) {
 		b := make([]byte, marker.BufferSize)
 		marker.Fill(b)
 		consume(b)
+		forceHeap(b)
+		escaped = nil
 	})
 	runtime.GC()
 	close(ready)

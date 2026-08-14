@@ -17,7 +17,8 @@ fi
 
 export GOEXPERIMENT=runtimesecret
 
-go build -o "${bin_dir}/subject" "${repo_dir}/cmd/subject"
+go build -gcflags='-m=2' -o "${bin_dir}/subject" "${repo_dir}/cmd/subject" \
+  2>"${run_dir}/escape-analysis.txt"
 go build -o "${bin_dir}/scanner" "${repo_dir}/cmd/scanner"
 
 mapfile -t cases < <("${bin_dir}/subject" -list)

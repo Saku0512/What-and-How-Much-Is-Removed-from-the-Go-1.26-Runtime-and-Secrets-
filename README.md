@@ -22,6 +22,8 @@ Go 1.26で実験的に導入された[`runtime/secret`](https://pkg.go.dev/runti
 
 マーカー本体はソースコード、実行ファイル、引数、環境変数、ログには格納しません。subjectとscannerが同じアルゴリズムから個別に再生成します。
 
+heapケースではsliceを一度package-level変数へ代入し、コンパイラに明示的にescapeさせます。到達不能なheapを調べるケースでは、その参照を`nil`へ戻してから観測します。ビルド時のescape analysisは`escape-analysis.txt`へ保存されます。
+
 ## 検証ケース
 
 | ケース | 状態 | 主な観測目的 |
@@ -83,6 +85,7 @@ USE_SUDO_GCORE=1 ./scripts/run.sh
 ```text
 artifacts/manual/
 ├── summary.tsv
+├── escape-analysis.txt
 ├── plain-stack-live.json
 ├── plain-stack-live.log
 └── ...
