@@ -93,6 +93,29 @@ artifacts/manual/
 
 `summary.tsv`には、各core dumpから見つかったマーカーの件数が記録されます。GitHub Actionsでも同じ検証を実行し、TSV・JSON・ログをworkflow artifactとして保存します。
 
+## Go 1.26.5での初回結果
+
+GitHub ActionsのUbuntu 24.04.4（Linux/amd64）、Go 1.26.5で取得した結果です。生データは[`results/go1.26.5-linux-amd64.tsv`](results/go1.26.5-linux-amd64.tsv)に保存しています。
+
+| ケース | 検出数 |
+|---|---:|
+| `plain-heap-after-gc` | 1 |
+| `plain-stack-live` | 1 |
+| `plain-stack-returned` | 1 |
+| `secret-copy-out` | 1 |
+| `secret-global` | 1 |
+| `secret-heap-after-gc` | 0 |
+| `secret-heap-before-gc` | 1 |
+| `secret-heap-escaped` | 1 |
+| `secret-heap-live` | 1 |
+| `secret-panic` | 0 |
+| `secret-stack-live` | 1 |
+| `secret-stack-returned` | 0 |
+
+この環境では、通常のstackは関数return後も残留し、通常のheapもGC後に残留しました。一方、`secret.Do`内のstackはreturn後に見つからず、到達不能なheapはGC前には見つかり、GC後には見つかりませんでした。liveな値、外部へescapeした値、外部へコピーした値、グローバル領域の値は引き続き検出されています。panic時にはstack上のマーカーは検出されませんでした。
+
+これは当該バイナリと実行環境における観測結果であり、秘密情報があらゆる状況で完全に消去されることの証明ではありません。
+
 ## 注意点
 
 - 「見つからなかった」は、あらゆる秘密情報の消去を証明するものではありません。

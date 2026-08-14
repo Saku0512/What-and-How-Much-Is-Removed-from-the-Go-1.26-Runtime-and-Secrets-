@@ -1,0 +1,13 @@
+case	occurrences
+plain-heap-after-gc	1
+plain-stack-live	1
+plain-stack-returned	1
+secret-copy-out	1
+secret-global	1
+secret-heap-after-gc	0
+secret-heap-before-gc	1
+secret-heap-escaped	1
+secret-heap-live	1
+secret-panic	0
+secret-stack-live	1
+secret-stack-returned	0
