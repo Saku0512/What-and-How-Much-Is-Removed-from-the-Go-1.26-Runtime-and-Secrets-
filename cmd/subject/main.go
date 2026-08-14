@@ -22,6 +22,7 @@ var (
 	hold        = make(chan struct{})
 	sink        uint64
 	escaped     []byte
+	heapAnchors [][]byte
 	globalBytes [marker.BufferSize]byte
 	panicValue  = errors.New("intentional panic without secret data")
 )
@@ -98,6 +99,20 @@ func forceHeap(b []byte) {
 	escaped = b
 }
 
+// newHeapTarget keeps allocations immediately before and after the target
+// reachable. This prevents an otherwise empty span containing the target from
+// being scavenged wholesale after GC, which would make both the normal and
+// secret cases appear clean without demonstrating object-level zeroing.
+//
+//go:noinline
+func newHeapTarget() []byte {
+	before := make([]byte, marker.BufferSize)
+	target := make([]byte, marker.BufferSize)
+	after := make([]byte, marker.BufferSize)
+	heapAnchors = append(heapAnchors, before, after)
+	return target
+}
+
 //go:noinline
 func makePlainStack() {
 	var b [marker.BufferSize]byte
@@ -143,7 +158,7 @@ func secretStackReturned(ready chan<- struct{}) {
 
 //go:noinline
 func makePlainHeap() {
-	b := make([]byte, marker.BufferSize)
+	b := newHeapTarget()
 	marker.Fill(b)
 	consume(b)
 	forceHeap(b)
@@ -159,7 +174,7 @@ func plainHeapAfterGC(ready chan<- struct{}) {
 
 func secretHeapLive(ready chan<- struct{}) {
 	secret.Do(func() {
-		b := make([]byte, marker.BufferSize)
+		b := newHeapTarget()
 		marker.Fill(b)
 		consume(b)
 		forceHeap(b)
@@ -171,7 +186,7 @@ func secretHeapLive(ready chan<- struct{}) {
 
 func secretHeapBeforeGC(ready chan<- struct{}) {
 	secret.Do(func() {
-		b := make([]byte, marker.BufferSize)
+		b := newHeapTarget()
 		marker.Fill(b)
 		consume(b)
 		forceHeap(b)
@@ -183,7 +198,7 @@ func secretHeapBeforeGC(ready chan<- struct{}) {
 
 func secretHeapAfterGC(ready chan<- struct{}) {
 	secret.Do(func() {
-		b := make([]byte, marker.BufferSize)
+		b := newHeapTarget()
 		marker.Fill(b)
 		consume(b)
 		forceHeap(b)
@@ -196,7 +211,7 @@ func secretHeapAfterGC(ready chan<- struct{}) {
 
 func secretHeapEscaped(ready chan<- struct{}) {
 	secret.Do(func() {
-		b := make([]byte, marker.BufferSize)
+		b := newHeapTarget()
 		marker.Fill(b)
 		consume(b)
 		escaped = b

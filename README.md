@@ -22,7 +22,7 @@ Go 1.26で実験的に導入された[`runtime/secret`](https://pkg.go.dev/runti
 
 マーカー本体はソースコード、実行ファイル、引数、環境変数、ログには格納しません。subjectとscannerが同じアルゴリズムから個別に再生成します。
 
-heapケースではsliceを一度package-level変数へ代入し、コンパイラに明示的にescapeさせます。到達不能なheapを調べるケースでは、その参照を`nil`へ戻してから観測します。ビルド時のescape analysisは`escape-analysis.txt`へ保存されます。
+heapケースではsliceを一度package-level変数へ代入し、コンパイラに明示的にescapeさせます。到達不能なheapを調べるケースでは、その参照を`nil`へ戻してから観測します。また、対象allocationの直前・直後に作ったanchorを到達可能なまま残し、対象を含むspan全体がscavengeされただけで「消去された」と誤判定することを防ぎます。ビルド時のescape analysisは`escape-analysis.txt`へ保存されます。
 
 ## 検証ケース
 
