@@ -1,0 +1,11 @@
+services:
+  validation:
+    build: .
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      KEEP_CORES: "0"
+    volumes:
+      - ./artifacts:/src/artifacts
